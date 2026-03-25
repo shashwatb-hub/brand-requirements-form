@@ -1,0 +1,614 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+.wrap{max-width:500px;margin:0 auto;padding:1rem;}
+.hdr{text-align:center;padding:1rem 0 0.5rem;}
+.hdr h1{font-size:20px;font-weight:500;color:var(--color-text-primary);}
+.hdr p{font-size:13px;color:var(--color-text-secondary);margin-top:4px;}
+.mic-area{display:flex;flex-direction:column;align-items:center;padding:1rem 0 0.5rem;}
+.mic-btn{width:64px;height:64px;border-radius:50%;border:2px solid var(--color-border-secondary);background:var(--color-background-primary);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.mic-btn.on{border-color:#E24B4A;background:#FCEBEB;}
+.mic-btn.dictating{border-color:#854F0B;background:#FAEEDA;}
+.mic-btn.waiting{border-color:#0F6E56;background:#E1F5EE;}
+.mic-btn.saving{border-color:#185FA5;background:#E6F1FB;}
+.mic-btn svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;}
+.mic-st{font-size:13px;color:var(--color-text-secondary);margin-top:7px;min-height:18px;text-align:center;line-height:1.5;}
+.dictate-mode-banner{display:none;margin:0.4rem 0;padding:8px 14px;border-radius:var(--border-radius-md);background:#FAEEDA;border:0.5px solid #EF9F27;font-size:12px;color:#633806;text-align:center;}
+.dictate-mode-banner.on{display:block;}
+.state-banner{display:none;margin:0.4rem 0;padding:8px 14px;border-radius:var(--border-radius-md);font-size:12px;font-weight:500;text-align:center;}
+.state-banner.active{display:block;}
+.state-banner.addition{background:var(--color-background-warning);color:var(--color-text-warning);}
+.state-banner.confirm{background:var(--color-background-success);color:var(--color-text-success);}
+.voice-cmds{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:8px 12px;margin:0.4rem 0;border:0.5px solid var(--color-border-tertiary);}
+.voice-cmds p{font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+.cmd-group{margin-bottom:4px;}
+.cmd-group .lbl{font-size:10px;color:var(--color-text-tertiary);margin-bottom:2px;}
+.voice-cmds span{font-size:11px;color:var(--color-text-primary);background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:20px;padding:2px 7px;margin:2px;display:inline-block;}
+.tbox{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:9px 13px;font-size:13px;color:var(--color-text-primary);min-height:40px;margin:0.5rem 0 0.25rem;line-height:1.6;border:0.5px solid var(--color-border-tertiary);}
+.tbox.cmd{border-color:#0F6E56;background:#E1F5EE;}
+.tbox.dictating{border-color:#EF9F27;background:#FAEEDA;}
+.dictate-row{display:flex;gap:6px;margin-bottom:0.6rem;}
+.dictate-row input{flex:1;font-size:13px;padding:7px 10px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);}
+.dictate-row button{font-size:12px;padding:7px 12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer;white-space:nowrap;}
+.sec{margin-bottom:1rem;}
+.sec-t{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px;}
+.f{margin-bottom:7px;}
+.f label{font-size:12px;color:var(--color-text-secondary);display:block;margin-bottom:3px;}
+.f label .req{color:#E24B4A;margin-left:2px;}
+.f input,.f select,.f textarea{width:100%;font-size:13px;padding:7px 10px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);}
+.f textarea{min-height:48px;resize:vertical;}
+.f.lit input,.f.lit select{border-color:#378ADD;background:#E6F1FB;}
+.f.err label{color:#E24B4A;}
+.f.err input,.f.err select{border-color:#E24B4A;background:#FCEBEB;}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.atag{font-size:10px;color:var(--color-text-info);background:var(--color-background-info);padding:1px 5px;border-radius:10px;margin-left:3px;vertical-align:middle;}
+.contact-row{display:flex;gap:6px;align-items:flex-end;margin-bottom:7px;}
+.contact-row .f{flex:1;margin-bottom:0;}
+.contact-row button{padding:7px 10px;font-size:12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-secondary);cursor:pointer;white-space:nowrap;}
+.btns{display:flex;gap:8px;margin-top:0.75rem;}
+.btns button{flex:1;padding:10px;font-size:14px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);}
+.btns .review-btn{background:#0F6E56;color:#E1F5EE;border-color:#0F6E56;}
+.confirm-box{display:none;margin-top:0.75rem;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px 14px;}
+.confirm-box.show{display:block;}
+.confirm-box .ct{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;}
+.confirm-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:0.5px solid var(--color-border-tertiary);}
+.confirm-row:last-child{border-bottom:none;}
+.confirm-row span:first-child{color:var(--color-text-secondary);font-size:12px;flex-shrink:0;margin-right:8px;}
+.confirm-row span:last-child{font-size:12px;font-weight:500;color:var(--color-text-primary);text-align:right;}
+.dialog-box{margin-top:10px;padding:10px 12px;background:var(--color-background-primary);border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);}
+.dialog-box .dq{font-size:13px;color:var(--color-text-primary);font-weight:500;margin-bottom:8px;line-height:1.5;}
+.dialog-box .da{display:flex;gap:6px;flex-wrap:wrap;}
+.dialog-box .da button{font-size:12px;padding:6px 14px;border-radius:20px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);cursor:pointer;}
+.dialog-box .da button.yes{background:#185FA5;color:#E6F1FB;border-color:#185FA5;}
+.dialog-box .da button.no{background:#0F6E56;color:#E1F5EE;border-color:#0F6E56;}
+.toast{display:none;margin-top:0.75rem;padding:10px 14px;border-radius:var(--border-radius-md);font-size:13px;text-align:center;}
+.toast.ok{background:var(--color-background-success);color:var(--color-text-success);display:block;}
+.toast.err{background:var(--color-background-danger);color:var(--color-text-danger);display:block;}
+.tip{font-size:12px;color:var(--color-text-tertiary);text-align:center;padding:0.5rem 0 1rem;line-height:1.7;}
+</style>
+
+<div class="wrap">
+  <div class="hdr">
+    <h1>Brand Requirements</h1>
+    <p>Fully voice-driven · ICAO dictation · smart save</p>
+  </div>
+  <div class="mic-area">
+    <button class="mic-btn" id="micBtn" onclick="toggleMic()">
+      <svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
+    </button>
+    <div class="mic-st" id="micSt">Tap to speak</div>
+  </div>
+  <div class="dictate-mode-banner" id="dictBanner">ICAO Dictation Mode — say letters phonetically e.g. "November India Lima Kilo Alpha Mike Alpha Lima" · say "space", "comma", "dot", "at the rate" · say "end dictation" when done</div>
+  <div class="state-banner" id="stateBanner"></div>
+  <div class="voice-cmds">
+    <p>Voice commands</p>
+    <div class="cmd-group"><div class="lbl">Fill data:</div><span>"Brand Nilkamal"</span><span>"market Kukatpally"</span><span>"min area 12000 sqft"</span><span>"budget 6 lakhs"</span></div>
+    <div class="cmd-group"><div class="lbl">ICAO dictation:</div><span>"dictation brand name"</span><span>"dictation contact"</span><span>"dictation email"</span></div>
+    <div class="cmd-group"><div class="lbl">Save flow:</div><span>"save"</span><span>"done"</span><span>"submit"</span> · then <span>"no addition"</span> · then <span>"yes"</span></div>
+  </div>
+  <div class="tbox" id="tbox">Speech will appear here…</div>
+  <div class="dictate-row">
+    <input id="dictateInput" placeholder="Or type here if speech isn't working…">
+    <button onclick="parseDictate()">Parse text</button>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">Brand info</div>
+    <div class="f" id="fb"><label>Brand Name <span class="req">*</span></label><input id="brandName" type="text" placeholder="e.g. Nilkamal"></div>
+    <div class="r2">
+      <div class="f" id="fic"><label>Industry Category</label><select id="industryCategory"><option value="">Select…</option></select></div>
+      <div class="f" id="fsf"><label>Store Format</label><select id="storeFormat"><option value="">Select…</option></select></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sec-t">Location <span class="atag">auto-fills</span></div>
+    <div class="f" id="fmp"><label>Market Preference <span class="req">*</span></label><select id="marketPref" onchange="onMarket()"><option value="">Select…</option></select></div>
+    <div class="r2">
+      <div class="f" id="fmm"><label>Micro Market</label><select id="microMarket" onchange="onMicro()"><option value="">Select…</option></select></div>
+      <div class="f" id="fzp"><label>Zone <span class="atag">auto</span></label><select id="zonePref"><option value="">Auto</option></select></div>
+    </div>
+    <div class="f" id="fcr"><label>Commercial Road</label><select id="commRoad"><option value="">Select…</option></select></div>
+  </div>
+  <div class="sec">
+    <div class="sec-t">Space requirements</div>
+    <div class="r2">
+      <div class="f" id="fmna"><label>Min Area (sqft) <span class="req">*</span></label><input id="minArea" type="number" placeholder="0"></div>
+      <div class="f" id="fmxa"><label>Max Area (sqft)</label><input id="maxArea" type="number" placeholder="0"></div>
+    </div>
+    <div class="r2">
+      <div class="f" id="ffp"><label>Floor Preference</label><select id="floorPref"><option value="">Select…</option></select></div>
+      <div class="f" id="fpt"><label>Property Type</label><select id="propertyType"><option value="">Select…</option></select></div>
+    </div>
+    <div class="f" id="ffr"><label>Frontage Required</label><input id="frontage" type="text" placeholder="e.g. 30"></div>
+  </div>
+  <div class="sec">
+    <div class="sec-t">Budget</div>
+    <div class="r2">
+      <div class="f" id="ftb"><label>Total Budget (₹) <span class="req">*</span></label><input id="totalBudget" type="number" placeholder="0"></div>
+      <div class="f" id="fmnr"><label>Min Rent psf</label><input id="minRent" type="number" placeholder="0"></div>
+    </div>
+    <div class="f" id="fmxr"><label>Max Rent psf</label><input id="maxRent" type="number" placeholder="0"></div>
+  </div>
+  <div class="sec">
+    <div class="sec-t">Technical requirements</div>
+    <div class="r2">
+      <div class="f" id="fpb"><label>Power Backup</label><select id="powerBackup"><option value="">Select…</option></select></div>
+      <div class="f" id="fel"><label>Elevator / Escalator</label><select id="elevator"><option value="">Select…</option></select></div>
+    </div>
+    <div class="r2">
+      <div class="f" id="fgg"><label>Glass Glazing</label><select id="glassGlazing"><option value="">Select…</option></select></div>
+      <div class="f" id="fis"><label>Internal Staircase</label><select id="internalStair"><option value="">Select…</option></select></div>
+    </div>
+    <div class="r2">
+      <div class="f" id="ffl"><label>Flooring</label><select id="flooring"><option value="">Select…</option></select></div>
+      <div class="f" id="fch"><label>Ceiling Height (ft)</label><input id="ceilHeight" type="number" placeholder="0"></div>
+    </div>
+    <div class="r2">
+      <div class="f" id="fpk"><label>Power Load (KVA)</label><input id="powerKVA" type="number" placeholder="0"></div>
+      <div class="f" id="fpkg"><label>Parking (slots)</label><input id="parking" type="number" placeholder="0"></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sec-t">Contact</div>
+    <div class="contact-row">
+      <div class="f" id="fcp"><label>Contact Person</label><input id="contactPerson" type="text" placeholder="Name"></div>
+      <button onclick="pickContact()">+ Contacts</button>
+    </div>
+    <div class="f" id="fph"><label>Contact Phone</label><input id="contactPhone" type="tel" placeholder="Number"></div>
+    <div class="f" id="fem"><label>Contact Email</label><input id="contactEmail" type="email" placeholder="email@example.com"></div>
+  </div>
+  <div class="f"><label>Notes</label><textarea id="notes" placeholder="Any additional requirements…"></textarea></div>
+  <div class="btns">
+    <button onclick="clearForm()">Clear</button>
+    <button class="review-btn" onclick="startReviewFlow()">Review &amp; Confirm</button>
+  </div>
+  <div class="confirm-box" id="confirmBox">
+    <div class="ct">Data summary</div>
+    <div id="confirmRows"></div>
+    <div class="dialog-box" id="dialogBox">
+      <div class="dq" id="dialogQ"></div>
+      <div class="da" id="dialogA"></div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <div class="tip">Say <strong>"dictation brand name"</strong> then spell phonetically · Say <strong>"save"</strong> when ready · The form will guide you through the rest</div>
+</div>
+
+<script>
+const SHEET_URL='https://script.google.com/macros/s/AKfycby3FoGQ-0HdyjsUjfyvGoe9wdzXvg9ls74HlpMWk7nFn0DvtZpxaNJOnGH_CcAO_HuG/exec';
+
+const ICAO={
+  'alpha':'a','bravo':'b','charlie':'c','delta':'d','echo':'e','foxtrot':'f','golf':'g',
+  'hotel':'h','india':'i','juliet':'j','kilo':'k','lima':'l','mike':'m','november':'n',
+  'oscar':'o','papa':'p','quebec':'q','romeo':'r','sierra':'s','tango':'t','uniform':'u',
+  'victor':'v','whiskey':'w','xray':'x','yankee':'y','zulu':'z',
+  'x-ray':'x','x ray':'x',
+  'zero':'0','one':'1','two':'2','three':'3','four':'4','five':'5','six':'6','seven':'7','eight':'8','nine':'9',
+  'space':' ','comma':',','dot':'.','period':'.','at the rate':'@','at':'@','hyphen':'-','dash':'-','underscore':'_'
+};
+
+const SAVE_TRIGGERS=['save to sheet','confirm and save','save and submit','submit and save','send it','done save','save now','go ahead save','please save','save the form','save data','submit the form','save','submit','done'];
+const NO_TRIGGERS=['no addition','nothing to add','no additions','no changes','no more','nothing more','no','nope',"that's all",'thats all','all good','looks good','all done'];
+const YES_TRIGGERS=['yes','yes please','correct','confirmed','go ahead','proceed','confirm','save it','yes save','do it','affirmative','sure','yep','yeah'];
+
+const DIALOG={NONE:'none',ADDITION:'addition',SAVE_CONFIRM:'save_confirm'};
+let dialogState=DIALOG.NONE;
+let dictMode=false;
+let dictTarget=null;
+let dictBuffer=[];
+let preferredVoice=null;
+
+const ZMM=[{zone:'Central Zone',market:'Abids',micro:'Gunfoundry',road:'Abids Road'},{zone:'Central Zone',market:'Ameerpet',micro:'Maitrivanam',road:'Ameerpet Main Road'},{zone:'Central Zone',market:'Ameerpet',micro:'Punjagutta',road:'Greenlands Road'},{zone:'Central Zone',market:'Banjara Hills',micro:'Banjara Hills',road:'Road 1'},{zone:'Central Zone',market:'Banjara Hills',micro:'Banjara Hills',road:'Road 10'},{zone:'Central Zone',market:'Banjara Hills',micro:'Banjara Hills',road:'Road 11'},{zone:'Central Zone',market:'Banjara Hills',micro:'Banjara Hills',road:'Road 12'},{zone:'Central Zone',market:'Banjara Hills',micro:'Banjara Hills',road:'Road 2'},{zone:'Central Zone',market:'Banjara Hills',micro:'Banjara Hills',road:'Road 3'},{zone:'Central Zone',market:'Himayatnagar',micro:'Liberty',road:'Himayatnagar Main Road'},{zone:'Central Zone',market:'Jubilee Hills',micro:'Jubilee Hills',road:'Road 10'},{zone:'Central Zone',market:'Jubilee Hills',micro:'Checkpost',road:'Road 92'},{zone:'Central Zone',market:'Jubilee Hills',micro:'Checkpost',road:'Road 1'},{zone:'Central Zone',market:'Jubilee Hills',micro:'Film Nagar',road:'Film Nagar Main Road'},{zone:'Central Zone',market:'Jubilee Hills',micro:'Jubilee Hills',road:'Road 45'},{zone:'Central Zone',market:'Jubilee Hills',micro:'Jubilee Hills',road:'Road 36'},{zone:'Central Zone',market:'Khairatabad',micro:'Necklace Road',road:'Raj Bhavan Road'},{zone:'Central Zone',market:'Himayathnagar',micro:'Himayathnagar',road:'Himayathnagar Main Road'},{zone:'Central Zone',market:'Panjagutta',micro:'Panjagutta',road:'Panjagutta Main Road'},{zone:'Central Zone',market:'Somajiguda',micro:'Somajiguda',road:'Somajiguda Main Road'},{zone:'East Zone',market:'Hayathnagar',micro:'Hayathnagar',road:'NH65 Retail Strip'},{zone:'East Zone',market:'Dilsukhnagar',micro:'Dilsukhnagar',road:'Dilsukhnagar Main Road'},{zone:'East Zone',market:'LB Nagar',micro:'LB Nagar',road:'LB Nagar X Road'},{zone:'East Zone',market:'Nagole',micro:'Nagole',road:'Nagole Main Road'},{zone:'East Zone',market:'Uppal',micro:'Uppal',road:'Uppal X Road'},{zone:'East Zone',market:'AS Rao Nagar',micro:'AS Rao Nagar',road:'AS Rao Nagar Main Road'},{zone:'East Zone',market:'Boduppal',micro:'Boduppal',road:'Boduppal Main Road'},{zone:'East Zone',market:'Cherlapalli',micro:'Cherlapalli',road:'Cherlapalli Main Road'},{zone:'East Zone',market:'Hasthinapuram',micro:'Hasthinapuram',road:'Hasthinapuram Main Road'},{zone:'East Zone',market:'Kothapet',micro:'Kothapet',road:'Kothapet Main Road'},{zone:'East Zone',market:'Malakpet',micro:'Malakpet',road:'Malakpet Main Road'},{zone:'East Zone',market:'Moosarambagh',micro:'Moosarambagh',road:'Moosarambagh Main Road'},{zone:'East Zone',market:'Nagaram',micro:'Nagaram',road:'Nagaram Main Road'},{zone:'East Zone',market:'Sainikpuri',micro:'Sainikpuri',road:'Sainikpuri Main Road'},{zone:'East Zone',market:'Vanasthalipuram',micro:'Vanasthalipuram',road:'Vanasthalipuram Main Road'},{zone:'North Zone',market:'Alwal',micro:'Alwal',road:'Alwal Main Road'},{zone:'North Zone',market:'Begumpet',micro:'Begumpet',road:'Begumpet Main Road'},{zone:'North Zone',market:'Malkajgiri',micro:'Safilguda',road:'Safilguda Main Road'},{zone:'North Zone',market:'Secunderabad',micro:'General Bazaar',road:'General Bazaar Road'},{zone:'North Zone',market:'Secunderabad',micro:'MG Road',road:'MG Road'},{zone:'North Zone',market:'Secunderabad',micro:'Paradise',road:'Paradise Circle'},{zone:'North Zone',market:'Tarnaka',micro:'Tarnaka',road:'Tarnaka X Road'},{zone:'North Zone',market:'Bachupally',micro:'Bachupally',road:'Bachupally Main Road'},{zone:'North Zone',market:'Bowenpally',micro:'Bowenpally',road:'Bowenpally Main Road'},{zone:'North Zone',market:'Kompally',micro:'Kompally',road:'Kompally Main Road'},{zone:'South Zone',market:'Begum Bazaar',micro:'Begum Bazaar',road:'Begum Bazaar Road'},{zone:'South Zone',market:'Charminar',micro:'Laad Bazaar',road:'Laad Bazaar Street'},{zone:'South Zone',market:'Falaknuma',micro:'Falaknuma',road:'Falaknuma Road'},{zone:'South Zone',market:'Mehdipatnam',micro:'Mehdipatnam',road:'Mehdipatnam X Roads'},{zone:'South Zone',market:'Tolichowki',micro:'Tolichowki',road:'Tolichowki Main Road'},{zone:'South Zone',market:'Attapur',micro:'Attapur',road:'Attapur Main Road'},{zone:'South Zone',market:'Bandlaguda Suncity',micro:'Bandlaguda Suncity',road:'Bandlaguda Suncity Main Road'},{zone:'South Zone',market:'Kokapet',micro:'Kokapet',road:'Kokapet Main Road'},{zone:'South Zone',market:'Narsingi',micro:'Narsingi',road:'Narsingi Main Road'},{zone:'South Zone',market:'Rajendra Nagar',micro:'Rajendra Nagar',road:'Rajendra Nagar Main Road'},{zone:'South Zone',market:'Shamshabad',micro:'Shamshabad',road:'Shamshabad Main Road'},{zone:'West Zone',market:'Kukatpally',micro:'KPHB',road:'KPHB 5th Phase Road'},{zone:'West Zone',market:'Kukatpally',micro:'KPHB',road:'KPHB Main Road'},{zone:'West Zone',market:'Miyapur',micro:'Miyapur',road:'Miyapur Cross Road'},{zone:'West Zone',market:'Chandanagar',micro:'Chandanagar',road:'BHEL Road'},{zone:'West Zone',market:'Patancheru',micro:'Patancheru',road:'Mumbai Highway Service Road'},{zone:'West Zone',market:'Gachibowli',micro:'Financial District',road:'Gachibowli Main Road'},{zone:'West Zone',market:'Gachibowli',micro:'Financial District',road:'ISB Road'},{zone:'West Zone',market:'Hitech City',micro:'Madhapur',road:'Hitech City Main Road'},{zone:'West Zone',market:'Hitech City',micro:'Madhapur',road:'Inorbit Mall Road'},{zone:'West Zone',market:'Kondapur',micro:'Kondapur',road:'Botanical Garden Road'},{zone:'West Zone',market:'Kondapur',micro:'Kondapur',road:'Kondapur Main Road'},{zone:'West Zone',market:'Ameenpur',micro:'Ameenpur',road:'Ameenpur Main Road'},{zone:'West Zone',market:'Kukatpally',micro:'Kukatpally',road:'Kukatpally Main Road'},{zone:'West Zone',market:'Kukatpally',micro:'Kukatpally',road:'Kukatpally Metro Road'},{zone:'West Zone',market:'Madhapur',micro:'Madhapur',road:'Madhapur Main Road'},{zone:'West Zone',market:'Manikonda',micro:'Manikonda',road:'Manikonda Main Road'},{zone:'West Zone',market:'RC Puram',micro:'RC Puram',road:'RC Puram Main Road'},{zone:'West Zone',market:'Tellapur',micro:'Tellapur',road:'Tellapur Main Road'},{zone:'West Zone',market:'Gachibowli',micro:'Khajaguda',road:'Khajaguda Main Road'},{zone:'West Zone',market:'Manikonda',micro:'Puppalaguda',road:'Pupapalaguda-Shaikhpet Main Road'},{zone:'West Zone',market:'Gachibowli',micro:'Indira Nagar',road:'Gachibowli Main Road'},{zone:'West Zone',market:'Gachibowli',micro:'Nanakramguda',road:'Nanakramguda Main Road'},{zone:'West Zone',market:'Gachibowli',micro:'Nanakramguda',road:'Nanakramguda Market Road'},{zone:'West Zone',market:'Gachibowli',micro:'Nanakramguda',road:'ORR Service Road'},{zone:'West Zone',market:'Raidurgam',micro:'Raidurgam',road:'Raidurgam Main Road'},{zone:'West Zone',market:'Hitech City',micro:'Kavuri Hills',road:'Kavuri Hills Main Road'},{zone:'West Zone',market:'Hitech City',micro:'Hitech City SEZ',road:'Hitech City Main Road'},{zone:'West Zone',market:'Hitech City',micro:'Hitech City',road:'Hitech City AIG Road'},{zone:'West Zone',market:'Hitech City',micro:'Hitex',road:'Hitech City-Kondapur Main Road'},{zone:'West Zone',market:'Kondapur',micro:'Raghavendra Colony',road:'High Tension Road'}];
+
+const L={
+  industryCategory:['Apparel (Ethnic / Bridal)','Apparel (Indian)','Apparel (International)','Automobile / EV Showrooms','Bakery & Desserts (Standalone)','Banking / ATM','Beauty & Personal Care (Retail)','Beauty & Wellness','Co-working / IT Offices','Education & Coaching','Electronics & IT','Entertainment','Food & Beverage (Cafes)','Food & Beverage (Casual Dining)','Food & Beverage (Fine Dining / Bar)','Food & Beverage (QSR)','Footwear','Grocery & Supermarket','Gym & Fitness','Healthcare / Hospitals & Clinics','Home Furnishing & Furniture','Hotels / Hospitality','Jewellery (Lab Grown Diamonds)','Jewellery & Watches','Kids & Baby Retail','Lifestyle & Department Stores','Luggage & Accessories','Luxury & Designer Boutiques','Optical & Eyewear','Pharmacy','Telecom Stores'],
+  storeFormat:['Anchor Store','Co-working Space','Drive-Through','Experience Centre','Food Court','High Street / Standalone','Hospital / Clinic','Hotel','Shop-in-Shop','Showroom','Warehouse / Dark Store'],
+  floorPref:['Full Building','Ground','G+1','G+2','G+3','1+2','1+3','1+2+3+4','2+3','2+3+4','3+4','Either of Above Floors','Top Floor','Terrace','Basement + G','Any Floor','C+G+1+2+3+4+T','Stilt+1+2+3+4+5'],
+  propertyType:['Ready to Move In','Bare Shell','Warm Shell','Build-to-Suit (BTS)','Land Lease','Under Construction'],
+  powerBackup:['100% DG Backup','Partial DG Backup','No Requirement','As per Brand Standard'],
+  elevator:['Required (Elevator)','Required (Escalator)','Required (Both)','Not Required','As per Brand Standard'],
+  glassGlazing:['Full Glass Facade','Partial Glass','No Requirement','As per Brand Standard'],
+  internalStair:['Required','Not Required','As per Brand Standard'],
+  flooring:['Vitrified Tiles','Marble','Granite','Wooden / Laminate','Epoxy / Industrial','Bare Shell (Brand will do)','As per Brand Standard'],
+  market:[...new Set(ZMM.map(r=>r.market))].sort()
+};
+
+function pop(id,list){const s=document.getElementById(id);list.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o);});}
+['industryCategory','storeFormat','floorPref','propertyType','powerBackup','elevator','glassGlazing','internalStair','flooring'].forEach(k=>pop(k,L[k]));
+pop('marketPref',L.market);
+
+function onMarket(){
+  const m=document.getElementById('marketPref').value;if(!m)return;
+  const rows=ZMM.filter(r=>r.market===m);const zone=rows[0]?.zone||'';
+  const zs=document.getElementById('zonePref');zs.innerHTML='<option value="">Auto</option>';
+  ['West Zone','Central Zone','North Zone','East Zone','South Zone'].forEach(z=>{const o=document.createElement('option');o.value=z;o.textContent=z;if(z===zone)o.selected=true;zs.appendChild(o);});
+  const ms=document.getElementById('microMarket');ms.innerHTML='<option value="">Select…</option>';
+  [...new Set(rows.map(r=>r.micro))].forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;ms.appendChild(o);});
+  onMicro();lit('fzp');lit('fmm');
+}
+function onMicro(){
+  const m=document.getElementById('marketPref').value,mc=document.getElementById('microMarket').value;
+  const rows=ZMM.filter(r=>r.market===m&&(!mc||r.micro===mc));
+  const rs=document.getElementById('commRoad');rs.innerHTML='<option value="">Select…</option>';
+  [...new Set(rows.map(r=>r.road))].forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;rs.appendChild(o);});
+}
+function lit(id){const e=document.getElementById(id);if(!e)return;e.classList.add('lit');setTimeout(()=>e.classList.remove('lit'),2500);}
+function clearErr(fid){document.getElementById(fid)&&document.getElementById(fid).classList.remove('err');}
+function g(id){return(document.getElementById(id)?.value||'').trim();}
+
+function loadVoice(){
+  const voices=window.speechSynthesis.getVoices();
+  const prefs=['Samantha','Karen','Moira','Tessa','Veena','Nicky','Allison','Ava','Susan','Victoria','Zoe','Google UK English Female','Google US English'];
+  for(const name of prefs){const v=voices.find(v=>v.name.includes(name)&&v.lang.startsWith('en'));if(v){preferredVoice=v;return;}}
+  preferredVoice=voices.find(v=>v.gender==='female'&&v.lang.startsWith('en'))||voices.find(v=>v.lang.startsWith('en'))||voices[0]||null;
+}
+window.speechSynthesis.onvoiceschanged=loadVoice;
+loadVoice();
+
+function speak(txt,onEnd){
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(txt);
+  if(preferredVoice)u.voice=preferredVoice;
+  u.lang='en-IN';u.rate=0.88;u.pitch=1.08;u.volume=1;
+  if(onEnd)u.onend=onEnd;
+  window.speechSynthesis.speak(u);
+}
+
+function parseICAO(text){
+  let t=text.toLowerCase();
+  let result='';
+  const specialFirst=[['at the rate','@'],['x-ray','x'],['x ray','x']];
+  specialFirst.forEach(([k,v])=>{t=t.replace(new RegExp(k,'gi'),v);});
+  const words=t.split(/\s+/);
+  words.forEach(w=>{
+    const mapped=ICAO[w];
+    if(mapped!==undefined)result+=mapped;
+  });
+  return result;
+}
+
+function detectDictationTarget(text){
+  const t=text.toLowerCase();
+  if(/brand\s*name|brand/.test(t))return{id:'brandName',fid:'fb',label:'Brand Name'};
+  if(/contact\s*person|contact\s*name|contact/.test(t))return{id:'contactPerson',fid:'fcp',label:'Contact Name'};
+  if(/email/.test(t))return{id:'contactEmail',fid:'fem',label:'Email'};
+  if(/phone|mobile|number/.test(t))return{id:'contactPhone',fid:'fph',label:'Phone'};
+  if(/notes?/.test(t))return{id:'notes',fid:null,label:'Notes'};
+  return null;
+}
+
+function enterDictMode(target){
+  dictMode=true;dictTarget=target;dictBuffer=[];
+  document.getElementById('dictBanner').classList.add('on');
+  document.getElementById('tbox').classList.add('dictating');
+  document.getElementById('micBtn').classList.add('dictating');
+  document.getElementById('micSt').textContent='ICAO Dictation Mode for '+target.label+' — spell phonetically';
+  speak('Dictation mode on for '+target.label+'. Please spell the name phonetically using ICAO alphabet. Say end dictation when done.',()=>{if(!isOn)startMic();});
+}
+
+function exitDictMode(commit){
+  dictMode=false;
+  document.getElementById('dictBanner').classList.remove('on');
+  document.getElementById('tbox').classList.remove('dictating');
+  document.getElementById('micBtn').classList.remove('dictating');
+  if(commit&&dictTarget&&dictBuffer.length>0){
+    const val=dictBuffer.join('');
+    const el=document.getElementById(dictTarget.id);
+    if(el){
+      const selectEl=el.tagName==='SELECT';
+      if(selectEl){
+        const match=fuzzy(val,Array.from(el.options).map(o=>o.value).filter(v=>v));
+        if(match){el.value=match;lit(dictTarget.fid);speak('Set to '+match);}
+        else speak('No match found for '+val+'. Please select manually.');
+      } else {
+        el.value=val;clearErr(dictTarget.fid);lit(dictTarget.fid);
+        speak('Got it. '+dictTarget.label+' set to '+val);
+      }
+    }
+    if(dictTarget.id==='marketPref')setTimeout(onMarket,100);
+  } else if(!commit){
+    speak('Dictation cancelled.');
+  }
+  dictTarget=null;dictBuffer=[];
+  document.getElementById('micSt').textContent='Tap to speak';
+}
+
+function handleDictInput(text){
+  const t=text.toLowerCase().trim();
+  if(t.includes('end dictation')||t.includes('stop dictation')||t.includes('finish dictation')){
+    exitDictMode(true);return;
+  }
+  if(t.includes('cancel dictation')){exitDictMode(false);return;}
+  if(t.includes('clear')||t.includes('delete all')){dictBuffer=[];speak('Cleared. Please start again.');return;}
+  if(t.includes('backspace')||t.includes('delete last')){dictBuffer.pop();speak('Deleted last character. Current value: '+(dictBuffer.join('')||'empty'));return;}
+  const chars=parseICAO(t);
+  if(chars){
+    dictBuffer.push(chars);
+    const current=dictBuffer.join('');
+    document.getElementById('tbox').textContent='Dictating: '+current;
+    speak(chars==' '?'space added':chars==='@'?'at added':chars===','?'comma added':chars==='.'?'dot added':chars+' added. Current: '+current);
+  } else {
+    speak('Not recognised. Please use ICAO phonetic alphabet.');
+  }
+}
+
+function cleanNum(str){
+  if(!str)return'';
+  return str
+    .replace(/(\d[\d,]*)\s*(?:square\s*feet|sq\.?\s*ft\.?|sft|sqft|square foot)/gi,'$1')
+    .replace(/(\d[\d,]*)\s*(?:lakhs?|lacs?)/gi,(m,n)=>String(parseInt(n.replace(/,/g,''))*100000))
+    .replace(/(\d[\d,]*)\s*k(?:va|w|wh)?\b/gi,(m,n,sfx)=>sfx&&sfx.length>0?m:String(parseInt(n.replace(/,/g,''))*1000))
+    .replace(/(\d[\d,]*)\s*(?:kva|kilowatts?|kilowatt)/gi,'$1')
+    .replace(/(\d[\d,]*)\s*(?:feet|foot|ft\.?|meter|metres?|m)\b/gi,'$1')
+    .replace(/(\d[\d,]*)\s*(?:slots?|cars?|spaces?|vehicles?)/gi,'$1')
+    .replace(/(\d[\d,]*)\s*(?:rupees?|rs\.?|inr)/gi,'$1')
+    .replace(/,/g,'').trim();
+}
+
+function fuzzy(txt,list){
+  const t=txt.toLowerCase().trim();let best=null,bs=0;
+  list.forEach(item=>{
+    const il=item.toLowerCase();
+    if(il===t){best=item;bs=100;return;}
+    if(il.includes(t)||t.includes(il)){const s=Math.min(t.length,il.length)/Math.max(t.length,il.length)*90;if(s>bs){best=item;bs=s;}}
+    const tw=t.split(/\s+/);
+    tw.forEach(w=>{if(w.length>2&&il.includes(w)&&50>bs){best=item;bs=50;}});
+    if(t.length>=2){
+      const initials=t.replace(/\s+/g,'');
+      const firstLetters=item.split(/[\s\/\(\)&]+/).map(w=>w[0]?.toLowerCase()).filter(Boolean).join('');
+      if(firstLetters.includes(initials)||initials===firstLetters){if(70>bs){best=item;bs=70;}}
+    }
+  });
+  return bs>20?best:null;
+}
+
+function sv(id,val,fid){const e=document.getElementById(id);if(e&&val!==null&&val!==undefined&&val!==''){e.value=val;clearErr(fid);if(fid)lit(fid);}}
+
+function parse(text){
+  const t=text;let n=0;
+  function set(id,val,fid){if(val){sv(id,val,fid);n++;}}
+
+  const txtPats=[
+    {id:'brandName',fid:'fb',rx:/brand(?:\s+name)?\s+(?:is\s+)?([A-Za-z0-9\s&'\-]+?)(?=\s*,|\s+industry|\s+market|\s+store|\s+format|\s+category|$)/i},
+    {id:'contactPerson',fid:'fcp',rx:/contact(?:\s+person|name)?\s+(?:is\s+)?([A-Za-z\s]+?)(?=\s*,|\s+phone|\s+mobile|\s+email|$)/i},
+    {id:'contactPhone',fid:'fph',rx:/(?:phone|mobile|number)\s+(?:is\s+)?(\+?[\d\s\-]{8,})/i},
+    {id:'contactEmail',fid:'fem',rx:/email\s+(?:is\s+)?([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/i},
+    {id:'notes',fid:null,rx:/notes?\s+(?:is\s+)?(.+?)(?=\s*,\s*(?:brand|contact|market)|$)/i},
+  ];
+
+  const numPats=[
+    {id:'minArea',fid:'fmna',rx:/(?:min(?:imum)?\s+area|minimum\s+area)\s+(?:is\s+)?(\d[\d,]*(?:\s*(?:square\s*feet|sq\.?\s*ft\.?|sft|sqft))?)/i},
+    {id:'maxArea',fid:'fmxa',rx:/(?:max(?:imum)?\s+area|maximum\s+area)\s+(?:is\s+)?(\d[\d,]*(?:\s*(?:square\s*feet|sq\.?\s*ft\.?|sft|sqft))?)/i},
+    {id:'minRent',fid:'fmnr',rx:/min(?:imum)?\s+rent\s+(?:per\s+sq(?:uare)?\s*f(?:oo|ee)t|psf|per\s+sqft)?\s*(?:is\s+)?(\d+)/i},
+    {id:'maxRent',fid:'fmxr',rx:/max(?:imum)?\s+rent\s+(?:per\s+sq(?:uare)?\s*f(?:oo|ee)t|psf|per\s+sqft)?\s*(?:is\s+)?(\d+)/i},
+    {id:'ceilHeight',fid:'fch',rx:/ceiling\s+height\s+(?:is\s+)?(\d+(?:\.\d+)?)\s*(?:feet|foot|ft\.?|meter|m)?/i},
+    {id:'powerKVA',fid:'fpk',rx:/(?:power\s+(?:load|requirement)|kva)\s+(?:is\s+)?(\d+)\s*(?:kva|kilowatts?)?/i},
+    {id:'parking',fid:'fpkg',rx:/parking\s+(?:is\s+)?(\d+)\s*(?:slots?|cars?|spaces?|vehicles?)?/i},
+    {id:'frontage',fid:'ffr',rx:/frontage\s+(?:required\s+)?(?:is\s+)?(\d+(?:\.\d+)?)\s*(?:feet|foot|ft\.?|meter|m)?/i},
+  ];
+
+  txtPats.forEach(({id,fid,rx})=>{const m=t.match(rx);if(m)set(id,m[1].trim(),fid);});
+  numPats.forEach(({id,fid,rx})=>{const m=t.match(rx);if(m)set(id,cleanNum(m[1]),fid);});
+
+  const bm=t.match(/(?:total\s+)?(?:rental\s+)?budget\s+(?:is\s+)?(\d[\d,]*(?:\s*(?:lakhs?|lacs?|k))?)/i);
+  if(bm)set('totalBudget',cleanNum(bm[1]),'ftb');
+
+  const drops=[
+    {id:'industryCategory',fid:'fic',list:L.industryCategory,rx:/(?:industry|category|sector)\s+(?:is\s+)?([A-Za-z\s\/&\(\)]+?)(?=\s*,|\s+market|\s+store|\s+min|\s+max|\s+floor|\s+budget|$)/i},
+    {id:'storeFormat',fid:'fsf',list:L.storeFormat,rx:/(?:store\s+)?format\s+(?:is\s+)?([A-Za-z\s\/&\(\)]+?)(?=\s*,|\s+market|\s+min|\s+max|\s+floor|\s+budget|$)/i},
+    {id:'floorPref',fid:'ffp',list:L.floorPref,rx:/floor\s+(?:preference\s+)?(?:is\s+)?([A-Za-z0-9\+\s]+?)(?=\s*,|\s+market|\s+min|\s+max|\s+budget|\s+power|\s+glass|$)/i},
+    {id:'propertyType',fid:'fpt',list:L.propertyType,rx:/property\s+type\s+(?:is\s+)?([A-Za-z\s\/\(\)]+?)(?=\s*,|$)/i},
+    {id:'elevator',fid:'fel',list:L.elevator,rx:/(?:elevator|escalator)\s+(?:is\s+)?([A-Za-z\s\(\)]+?)(?=\s*,|$)/i},
+    {id:'glassGlazing',fid:'fgg',list:L.glassGlazing,rx:/(?:glass|glazing)\s+(?:is\s+)?([A-Za-z\s]+?)(?=\s*,|$)/i},
+    {id:'internalStair',fid:'fis',list:L.internalStair,rx:/(?:staircase|stair)\s+(?:is\s+)?([A-Za-z\s]+?)(?=\s*,|$)/i},
+    {id:'flooring',fid:'ffl',list:L.flooring,rx:/flooring\s+(?:is\s+)?([A-Za-z\s\/]+?)(?=\s*,|$)/i},
+  ];
+  drops.forEach(({id,fid,list,rx})=>{const m=t.match(rx);if(m){const match=fuzzy(m[1].trim(),list);if(match)set(id,match,fid);}});
+
+  if(/100\s*(?:percent|%)\s*(?:DG\s+)?backup/i.test(t))set('powerBackup','100% DG Backup','fpb');
+  else if(/partial\s+(?:DG\s+)?backup/i.test(t))set('powerBackup','Partial DG Backup','fpb');
+  else{const pb=t.match(/power\s+backup\s+(?:is\s+)?([A-Za-z0-9\s%]+?)(?=\s*,|$)/i);if(pb){const m=fuzzy(pb[1].trim(),L.powerBackup);if(m)set('powerBackup',m,'fpb');}}
+
+  const mm=t.match(/market\s+(?:preference\s+)?(?:is\s+)?([A-Za-z\s]+?)(?=\s*,|\s+micro|\s+min|\s+max|\s+floor|\s+budget|\s+zone|$)/i);
+  if(mm){const match=fuzzy(mm[1].trim(),L.market);if(match){set('marketPref',match,'fmp');setTimeout(onMarket,100);}}
+
+  return n;
+}
+
+function isSaveCmd(t){const tl=t.toLowerCase().trim();return SAVE_TRIGGERS.some(c=>tl===c||(tl.endsWith(c)&&tl.length<c.length+15)||(tl.startsWith(c)&&tl.length<c.length+10));}
+function isNoCmd(t){const tl=t.toLowerCase().trim();return NO_TRIGGERS.some(c=>tl===c||tl.includes(c));}
+function isYesCmd(t){const tl=t.toLowerCase().trim();return YES_TRIGGERS.some(c=>tl===c||tl.startsWith(c));}
+
+function handleSpeech(text){
+  document.getElementById('tbox').textContent=text;
+  if(dictMode){handleDictInput(text);return;}
+  const tl=text.toLowerCase();
+  const dictMatch=tl.match(/dictation(?:\s+(?:mode\s+)?(?:for\s+)?(.+))?/i);
+  if(dictMatch){
+    const targetText=dictMatch[1]||'brand name';
+    const target=detectDictationTarget(targetText);
+    if(target)enterDictMode(target);
+    else speak('Say dictation brand name, dictation contact, dictation email, or dictation phone.');
+    return;
+  }
+  if(dialogState!==DIALOG.NONE){handleDialogResponse(text);return;}
+  if(isSaveCmd(text)){stopMic();triggerReviewFlow();return;}
+  const n=parse(text);
+  document.getElementById('micSt').textContent=n>0?n+' field'+(n>1?'s':'')+' filled':'Heard — check fields';
+}
+
+function parseDictate(){
+  const txt=document.getElementById('dictateInput').value.trim();if(!txt)return;
+  handleSpeech(txt);
+}
+
+const MANDATORY=[{id:'brandName',fid:'fb'},{id:'marketPref',fid:'fmp'},{id:'minArea',fid:'fmna'},{id:'totalBudget',fid:'ftb'}];
+function validate(){
+  let ok=true;
+  MANDATORY.forEach(({id,fid})=>{const el=document.getElementById(fid);if(!g(id)){el&&el.classList.add('err');ok=false;}else{el&&el.classList.remove('err');}});
+  return ok;
+}
+
+function buildSummary(){
+  return[
+    {l:'Brand Name',v:g('brandName')},{l:'Industry Category',v:g('industryCategory')},{l:'Store Format',v:g('storeFormat')},
+    {l:'Market',v:g('marketPref')},{l:'Micro Market',v:g('microMarket')},{l:'Zone',v:g('zonePref')},{l:'Commercial Road',v:g('commRoad')},
+    {l:'Min Area',v:g('minArea')?g('minArea')+' sqft':''},{l:'Max Area',v:g('maxArea')?g('maxArea')+' sqft':''},
+    {l:'Floor Preference',v:g('floorPref')},{l:'Property Type',v:g('propertyType')},
+    {l:'Total Budget',v:g('totalBudget')?'₹'+Number(g('totalBudget')).toLocaleString('en-IN'):''},
+    {l:'Min Rent psf',v:g('minRent')},{l:'Max Rent psf',v:g('maxRent')},
+    {l:'Power Backup',v:g('powerBackup')},{l:'Elevator',v:g('elevator')},{l:'Glass Glazing',v:g('glassGlazing')},
+    {l:'Internal Staircase',v:g('internalStair')},{l:'Flooring',v:g('flooring')},
+    {l:'Ceiling Height',v:g('ceilHeight')?g('ceilHeight')+' ft':''},{l:'Power Load',v:g('powerKVA')?g('powerKVA')+' KVA':''},
+    {l:'Parking',v:g('parking')?g('parking')+' slots':''},{l:'Frontage',v:g('frontage')?g('frontage')+' ft':''},
+    {l:'Contact Person',v:g('contactPerson')},{l:'Contact Phone',v:g('contactPhone')},{l:'Contact Email',v:g('contactEmail')},{l:'Notes',v:g('notes')},
+  ].filter(f=>f.v);
+}
+
+function showConfirmBox(fields){
+  const rows=document.getElementById('confirmRows');rows.innerHTML='';
+  fields.forEach(f=>{const d=document.createElement('div');d.className='confirm-row';d.innerHTML='<span>'+f.l+'</span><span>'+f.v+'</span>';rows.appendChild(d);});
+  document.getElementById('confirmBox').classList.add('show');
+  document.getElementById('confirmBox').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function setDialog(q,btns){
+  document.getElementById('dialogQ').textContent=q;
+  const da=document.getElementById('dialogA');da.innerHTML='';
+  btns.forEach(b=>{const btn=document.createElement('button');btn.textContent=b.label;btn.className=b.cls||'';btn.onclick=b.fn;da.appendChild(btn);});
+}
+function setBanner(msg,type){const b=document.getElementById('stateBanner');b.textContent=msg;b.className='state-banner active '+type;}
+function clearBanner(){document.getElementById('stateBanner').className='state-banner';}
+
+function triggerReviewFlow(){
+  if(!validate()){
+    const missing=MANDATORY.filter(({id})=>!g(id)).map(({fid})=>document.getElementById(fid)?.querySelector('label')?.textContent?.replace('*','').trim()).filter(Boolean).join(', ');
+    speak('I noticed some required fields are missing: '+missing+'. Please fill them in before we save.');
+    showToast('Required fields missing: '+missing,'err');return;
+  }
+  startReviewFlow();
+}
+function startReviewFlow(){
+  if(!validate()){triggerReviewFlow();return;}
+  const fields=buildSummary();
+  showConfirmBox(fields);
+  const summaryText=fields.map(f=>f.l+': '+f.v).join('. ');
+  const fullText='Here is what I have captured. '+summaryText+'. Would you like to add anything else to this information?';
+  setBanner('Reading your summary…','addition');
+  document.getElementById('micBtn').classList.add('waiting');
+  speak(fullText,()=>{
+    dialogState=DIALOG.ADDITION;
+    setBanner('Say additional data to add more · Or say "no addition" if complete','addition');
+    setDialog('Would you like to add anything?',[
+      {label:'No, all done',cls:'no',fn:()=>handleNoAddition()},
+      {label:'Add more data',cls:'',fn:()=>{speak('Sure, go ahead. Please share the additional details.');}}
+    ]);
+    if(!isOn)startMic();
+  });
+}
+function handleNoAddition(){
+  dialogState=DIALOG.SAVE_CONFIRM;
+  setBanner('Say "Yes" to save · "No" to go back','confirm');
+  speak('Great, everything looks good. Shall I go ahead and save this to your Google Sheet?',()=>{
+    setDialog('Save to Google Sheets?',[
+      {label:'Yes, save now',cls:'yes',fn:()=>handleYesSave()},
+      {label:'No, edit first',cls:'',fn:()=>handleNoSave()},
+    ]);
+    document.getElementById('micBtn').classList.remove('waiting');
+    document.getElementById('micBtn').classList.add('saving');
+    document.getElementById('micSt').textContent='Say "Yes" to save or "No" to edit…';
+    if(!isOn)startMic();
+  });
+}
+function handleYesSave(){dialogState=DIALOG.NONE;clearBanner();document.getElementById('micBtn').classList.remove('saving','waiting','on');stopMic();saveToSheet();}
+function handleNoSave(){
+  dialogState=DIALOG.NONE;clearBanner();
+  document.getElementById('confirmBox').classList.remove('show');
+  document.getElementById('micBtn').classList.remove('saving','waiting');
+  speak('No problem! You can make your changes and just say save when you are ready.');
+  document.getElementById('micSt').textContent='Edit your data then say "save"';
+}
+function handleDialogResponse(text){
+  if(dialogState===DIALOG.ADDITION){
+    if(isNoCmd(text)){handleNoAddition();}
+    else if(isYesCmd(text)){speak('Please go ahead and share the additional information.');}
+    else{
+      const n=parse(text);
+      if(n>0){
+        const fields=buildSummary();showConfirmBox(fields);
+        speak(n+' field'+(n>1?'s':'')+' updated. Anything else you would like to add?');
+        setDialog('Anything else to add?',[{label:'No, all done',cls:'no',fn:()=>handleNoAddition()},{label:'Add more',cls:'',fn:()=>{speak('Go ahead.');}}]);
+      }else{speak('I did not quite catch that. Please say your addition, or say no addition if you are done.');}
+    }
+  } else if(dialogState===DIALOG.SAVE_CONFIRM){
+    if(isYesCmd(text))handleYesSave();
+    else if(isNoCmd(text))handleNoSave();
+    else speak('Just say yes to save, or no to go back and make changes.');
+  }
+}
+
+let recog=null,isOn=false;
+function startMic(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR||isOn)return;
+  recog=new SR();recog.continuous=true;recog.interimResults=true;recog.lang='en-IN';
+  recog.onstart=()=>{isOn=true;if(!dictMode&&dialogState===DIALOG.NONE)document.getElementById('micBtn').classList.add('on');};
+  recog.onresult=(e)=>{
+    let fin='',int='';
+    for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)fin+=e.results[i][0].transcript+' ';else int+=e.results[i][0].transcript;}
+    if(fin)handleSpeech(fin.trim());
+    else if(int)document.getElementById('tbox').textContent=int;
+  };
+  recog.onerror=(e)=>{if(e.error!=='no-speech')document.getElementById('micSt').textContent='Mic: '+e.error;};
+  recog.onend=()=>{isOn=false;if(dialogState!==DIALOG.NONE||dictMode)setTimeout(startMic,400);};
+  recog.start();
+}
+function stopMic(){isOn=false;document.getElementById('micBtn').classList.remove('on','waiting','saving','dictating');if(recog)try{recog.stop();}catch(e){}recog=null;}
+function toggleMic(){
+  if(isOn){stopMic();document.getElementById('micSt').textContent='Tap to speak';return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){document.getElementById('micSt').textContent='Not supported — use text box';return;}
+  document.getElementById('micSt').textContent='Listening… say "save" when done';
+  startMic();
+}
+
+async function pickContact(){
+  if(!('contacts' in navigator&&'ContactsManager' in window)){showToast('Contact picker not available on this browser','err');return;}
+  try{const c=(await navigator.contacts.select(['name','tel'],{multiple:false}))[0];if(c){if(c.name?.[0])document.getElementById('contactPerson').value=c.name[0];if(c.tel?.[0])document.getElementById('contactPhone').value=c.tel[0];lit('fcp');lit('fph');}}catch(e){showToast('Contact picker cancelled','err');}
+}
+function showToast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type;setTimeout(()=>t.className='toast',5000);}
+function clearForm(){
+  stopMic();dictMode=false;dictTarget=null;dictBuffer=[];dialogState=DIALOG.NONE;clearBanner();
+  document.getElementById('dictBanner').classList.remove('on');
+  document.getElementById('tbox').classList.remove('dictating','cmd');
+  document.querySelectorAll('input,select,textarea').forEach(e=>e.value='');
+  document.querySelectorAll('.f.err,.f.lit').forEach(e=>e.classList.remove('err','lit'));
+  document.getElementById('tbox').textContent='Speech will appear here…';
+  document.getElementById('micSt').textContent='Tap to speak';
+  document.getElementById('dictateInput').value='';
+  document.getElementById('confirmBox').classList.remove('show');
+  document.getElementById('toast').className='toast';
+  window.speechSynthesis.cancel();
+}
+async function saveToSheet(){
+  document.getElementById('micSt').textContent='Saving…';
+  const data={brandName:g('brandName'),industryCategory:g('industryCategory'),storeFormat:g('storeFormat'),marketPref:g('marketPref'),microMarket:g('microMarket'),zonePref:g('zonePref'),commRoad:g('commRoad'),minArea:g('minArea'),maxArea:g('maxArea'),floorPref:g('floorPref'),propertyType:g('propertyType'),frontage:g('frontage'),totalBudget:g('totalBudget'),minRent:g('minRent'),maxRent:g('maxRent'),powerBackup:g('powerBackup'),elevator:g('elevator'),glassGlazing:g('glassGlazing'),internalStair:g('internalStair'),flooring:g('flooring'),ceilHeight:g('ceilHeight'),powerKVA:g('powerKVA'),parking:g('parking'),contactPerson:g('contactPerson'),contactPhone:g('contactPhone'),contactEmail:g('contactEmail'),notes:g('notes')};
+  try{
+    const res=await fetch(SHEET_URL,{method:'POST',body:JSON.stringify(data)});
+    const json=await res.json();
+    if(json.status==='success'){
+      showToast('Saved! Lead ID: '+json.leadId,'ok');
+      document.getElementById('confirmBox').classList.remove('show');
+      speak('Wonderful! Your data has been saved successfully to Google Sheets. Your lead ID is '+json.leadId.replace('LEAD-',''));
+      document.getElementById('micSt').textContent='Saved — Lead ID: '+json.leadId;
+    }else{
+      showToast('Error: '+json.message,'err');
+      speak('Oh no, something went wrong while saving. '+json.message+'. Please try again.');
+      document.getElementById('micSt').textContent='Save failed.';
+    }
+  }catch(err){
+    showToast('Network error','err');
+    speak('I could not reach Google Sheets. Please check your connection and try again.');
+    document.getElementById('micSt').textContent='Network error.';
+  }
+}
+</script>
